@@ -5,7 +5,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import date
 from io import BytesIO, StringIO
 import requests
 
@@ -19,47 +18,46 @@ st.set_page_config(
 
 # ---------------- ADMIN CREDENTIALS ----------------
 ADMIN_USERNAME = "Admin"
-ADMIN_PASSWORD = "Admin"
 
+# LGA username to LGA name mapping (no passwords needed)
 LGA_CREDENTIALS = {
-    "kiru": ("Kiru@2024", "kiru"),
-    "minjibir": ("Minjibir@2024", "minjibir"),
-    "rimin_gado": ("RiminGado@2024", "rimin_gado"),
-    "shanono": ("Shanono@2024", "shanono"),
-    "tarauni": ("Tarauni@2024", "tarauni"),
-    "wudil": ("Wudil@2024", "wudil"),
+    "kware": "Kware",
+    "rabah": "Rabah",
+    "tureta": "Tureta",
+    "wamakko": "Wamakko",
+    "gada": "Gada",
+    "yabo": "Yabo",
 }
 
 
-KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/aBvDSQGCGKpDegseBTTjcj/export-settings/esauv3HQnXbiSEXbSSoDK95/data.xlsx"
+KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/anEFHiaTjMTpPbmayazSNQ/export-settings/esYBsyuHSRzKFJ9hB8Q9vUy/data.xlsx"
 
 # ---------------- COMMUNITY MAPPING DATA ----------------
 COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	community_name	Q4. Community Name	Planned HH
-kiru	baawa	50111	Baawa Cikin Gari	57
-kiru	baawa	50112	Karimawa Gidan Sarki	41
-kiru	badafi	50121	Rahma Gidan Wakili	51
-kiru	badafi	50122	Unguwan Mamman	14
-minjibir	azore	50211	Afanawa Layin Alhaji Nasiru	29
-minjibir	azore	50212	Gidan Rinji Layin Yakubu Adamu	12
-minjibir	gandurwawa	50221	Asanawar Saadu	23
-minjibir	gandurwawa	50222	Gandurwawa Unguwar A Haruna Anda	28
-rimin_gado	butu-butu	50311	Kofar Gabas	218
-rimin_gado	butu-butu	50312	Rokuwa Gangare	14
-rimin_gado	butu-butu	50313	Alkalwa	168
-rimin_gado	dawakin_gulu	50321	Sabuwar Unguwar Yomma	21
-rimin_gado	dawakin_gulu	50322	Tudun Asakala	17
-shanono	alajawa	50411	Koya Nassarawa Gangarawa	30
-shanono	alajawa	50412	Unguwar Sarkin Noma	27
-shanono	dutsen_bakoshi	50421	Gwazaye	19
-shanono	dutsen_bakoshi	50422	Unguwar Arewa	10
-tarauni	babban_giji	50511	19Th Link	35
-tarauni	babban_giji	50512	Hausawar Gandu Layin Alhaji Sharu	23
-tarauni	darmanawa	50521	Darmanawa Layin Tsohuwar Makabarta	214
-tarauni	darmanawa	50522	Layin Maman Aslamiya	56
-wudil	achika	50611	Hargagi Kuka	33
-wudil	achika	50612	Yallawa	29
-wudil	dagumawa	50621	Dagumawa	41
-wudil	dagumawa	50622	Fagen Zaki Layin Ado Mai Karofi	191"""
+Kware	Tunga Mallamawa	70111	Tsalibawa	29
+Kware	Tunga Mallamawa	70112	Gebawa_C	30
+Kware	Bankanu	70121	Runji	49
+Kware	Bankanu	70122	Shiyar_Yar_Kofa	19
+Rabah	Rabah	70211	Ubandawaki_A	20
+Rabah	Rabah	70212	Galadima_A	21
+Rabah	Maikujera	70221	Shiyar_Galadima_H_Shida	22
+Rabah	Maikujera	70222	Gidan_Danayya	29
+Tureta	Tureta	70311	Dan_Fil	59
+Tureta	Tureta	70312	Gangamawa_Dorowa	69
+Tureta	Lofa	70321	Gidan_Gulbi	89
+Tureta	Lofa	70322	Lofa_Tudaadanni	82
+Wamakko	Gumbi	70411	Shiyar_Samna_A	19
+Wamakko	Gumbi	70412	Kauran_Malam_Alasan	80
+Wamakko	Bado	70421	Alu_Quarters_Gabas	94
+Wamakko	Bado	70422	C_O_E	59
+Gada	Gada	70511	Bigal	67
+Gada	Gada	70512	Marmaro	89
+Gada	Kyadawa Holai	70521	Danbirema	10
+Gada	Kyadawa Holai	70522	Dantudun_Gidan_Amamata	40
+Yabo	Yabo B	70611	Baware_Shiyar_Lelaba	39
+Yabo	Yabo B	70612	Shiyar_Wambai_Danfili	39
+Yabo	Yabo A	70621	Rugar_Fako	49
+Yabo	Yabo A	70622	Mazaren_Gabas	78"""
 
 # Parse community mapping data
 COMMUNITY_DF = pd.read_csv(StringIO(COMMUNITY_MAPPING_DATA), sep='\t')
@@ -266,45 +264,118 @@ st.markdown("""
 # ---------------- DATA LOADING ----------------
 @st.cache_data(show_spinner="📊 Loading data from KoboToolbox...", ttl=600)
 def load_data_from_kobo():
-    """Load data directly from KoboToolbox API"""
+    """Load all sheets from KoboToolbox API and return as dictionary"""
     try:
         # Check if URL is configured
-        if "YOUR_ASSET_ID" in KOBO_DATA_URL or "myurl_here" in KOBO_DATA_URL:
+        if "YOUR_ASSET_ID" in KOBO_DATA_URL or "myurl_here" in KOBO_DATA_URL or "my url here" in KOBO_DATA_URL:
             st.warning("⚠️ KoboToolbox URL is not configured. Please update the KOBO_DATA_URL variable in the code.")
-            return pd.DataFrame()
+            return {
+                'main': pd.DataFrame(),
+                'child_info': pd.DataFrame(),
+                'child_infoo': pd.DataFrame(),
+                'net_repeat': pd.DataFrame()
+            }
         
         response = requests.get(KOBO_DATA_URL, timeout=60)
         response.raise_for_status()
         excel_file = BytesIO(response.content)
-        df = pd.read_excel(excel_file)
         
-        return df
+        # Read all sheets
+        sheets_dict = {}
+        try:
+            # Read main sheet (Coverage Evaluation Survey)
+            sheets_dict['main'] = pd.read_excel(excel_file, sheet_name=0)
+            
+            # Try to read other sheets
+            try:
+                sheets_dict['child_info'] = pd.read_excel(excel_file, sheet_name='child_info')
+            except Exception:
+                sheets_dict['child_info'] = pd.DataFrame()
+            
+            try:
+                sheets_dict['child_infoo'] = pd.read_excel(excel_file, sheet_name='child_infoo')
+            except Exception:
+                sheets_dict['child_infoo'] = pd.DataFrame()
+            
+            try:
+                sheets_dict['net_repeat'] = pd.read_excel(excel_file, sheet_name='net_repeat')
+            except Exception:
+                sheets_dict['net_repeat'] = pd.DataFrame()
+                
+        except Exception as e:
+            st.warning(f"⚠️ Could not read all sheets: {e}. Loading main sheet only.")
+            sheets_dict = {
+                'main': pd.read_excel(excel_file),
+                'child_info': pd.DataFrame(),
+                'child_infoo': pd.DataFrame(),
+                'net_repeat': pd.DataFrame()
+            }
+        
+        return sheets_dict
     
     except Exception as e:
         st.error(f"❌ Error loading data from KoboToolbox: {e}")
         st.info("Please check that your KOBO_DATA_URL is correct and accessible.")
-        return pd.DataFrame()
+        return {
+            'main': pd.DataFrame(),
+            'child_info': pd.DataFrame(),
+            'child_infoo': pd.DataFrame(),
+            'net_repeat': pd.DataFrame()
+        }
 
 
-def preprocess_data(df):
-    """Preprocess and map column names"""
-    if df.empty:
-        return df
+def preprocess_data(sheets_dict):
+    """Preprocess and map column names for all sheets"""
+    if not sheets_dict or sheets_dict['main'].empty:
+        return sheets_dict
     
-    df = df.copy()
+    # Process main sheet
+    df_main = sheets_dict['main'].copy()
     
-    # Map community codes to names if community_name exists
-    if 'community_name' in df.columns:
-        df['Community_Code_Original'] = df['community_name'].copy()
-        df['Q4. Community Name'] = df['community_name'].astype(str).map(COMMUNITY_CODE_TO_NAME).fillna(df.get('Q4. Community Name', ''))
+    # Map community codes to names - Q4. Community Name contains codes, we need to map them to actual names
+    if 'Q4. Community Name' in df_main.columns:
+        # Create a new column with actual community names
+        df_main['Community Name'] = df_main['Q4. Community Name'].astype(str).map(COMMUNITY_CODE_TO_NAME)
+        # Fill any NaN values with the original code if mapping fails
+        df_main['Community Name'].fillna(df_main['Q4. Community Name'], inplace=True)
     
-    # Convert date columns
-    date_cols = ['Q8. Date', '_submission_time', 'start', 'Date']
+    # Convert date columns in main sheet
+    date_cols = ['Q8. Date', '_submission_time', 'start', 'end']
     for col in date_cols:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
+        if col in df_main.columns:
+            df_main[col] = pd.to_datetime(df_main[col], errors='coerce')
     
-    return df
+    # Process child_info sheet
+    if not sheets_dict['child_info'].empty:
+        df_child_info = sheets_dict['child_info'].copy()
+        # Convert age to numeric
+        if 'Age of child ${child_id} as at when MDA was done (19th to 25th July 2025)' in df_child_info.columns:
+            df_child_info['age_months'] = pd.to_numeric(
+                df_child_info['Age of child ${child_id} as at when MDA was done (19th to 25th July 2025)'], 
+                errors='coerce'
+            )
+        sheets_dict['child_info'] = df_child_info
+    
+    # Process child_infoo sheet (children <5 years)
+    if not sheets_dict['child_infoo'].empty:
+        df_child_infoo = sheets_dict['child_infoo'].copy()
+        # Convert age column
+        age_col = 'Q88. Child name and age ${child_idd} as at when MDA was done (19th to 25th July 2025)'
+        if age_col in df_child_infoo.columns:
+            df_child_infoo['age_months'] = pd.to_numeric(df_child_infoo[age_col], errors='coerce')
+        sheets_dict['child_infoo'] = df_child_infoo
+    
+    # Process net_repeat sheet
+    if not sheets_dict['net_repeat'].empty:
+        df_net = sheets_dict['net_repeat'].copy()
+        # Convert months column to numeric
+        months_col = 'Q81. Net ${net_id} :How many months ago did your household get the mosquito net?'
+        if months_col in df_net.columns:
+            df_net['months_since_net'] = pd.to_numeric(df_net[months_col], errors='coerce')
+        sheets_dict['net_repeat'] = df_net
+    
+    sheets_dict['main'] = df_main
+    return sheets_dict
 
 
 # ---------------- HELPER FUNCTION FOR FLEXIBLE COLUMN MATCHING ----------------
@@ -358,7 +429,7 @@ def calculate_metrics(df):
             break
     
     # Flexible column name matching for Community
-    community_cols = ['Q4. Community Name', 'community', 'Community', 'Community Name']
+    community_cols = ['Community Name', 'Q4. Community Name', 'community', 'Community']
     for col in community_cols:
         if col in df.columns:
             metrics['total_communities'] = df[col].nunique()
@@ -598,31 +669,44 @@ def perform_qc_checks(df, child_df=None):
     # Find column names flexibly
     lga_col = find_column(df, ['lgas', 'lga', 'Q2. Local Government Area', 'LGA'])
     ward_col = find_column(df, ['wards', 'ward', 'Q3.Ward', 'Q3. Ward', 'Ward'])
-    community_col = find_column(df, ['Q4. Community Name', 'community', 'Community Name'])
+    community_col = find_column(df, ['Community Name', 'Q4. Community Name', 'community'])
+    uuid_col = find_column(df, ['_uuid', 'uuid'])
+    unique_code_col = find_column(df, ['unique_code', 'unique_code_1', 'household_code'])
+    validation_status_col = find_column(df, ['_validation_status', 'validation_status', 'Validation Status'])
     
-    # QC Check 1: Age of residence vs Age of respondent
+    # Create lookup dictionary for child records to get parent HH info
+    parent_lookup = {}
+    if uuid_col:
+        for idx, row in df.iterrows():
+            parent_lookup[row[uuid_col]] = {
+                'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
+                'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
+                'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
+                'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A'
+            }
+    
+    # QC Check 1: Q22 > Q13 (Years living > Age of HH Head)
     q22_col = find_column(df, ['Q22. How long have you been living continuously in ${community_confirm}', 
                                 'Q22', 'years_living', 'residence_duration'])
-    q17_col = find_column(df, [
-        'Q17. How old is ${name_questionnaire}?', 
-        'Q17', 
-        'age', 
-        'respondent_age',
-        'Age of child ${child_id} as at when MDA was done (24th to 29th July 2025)',
-        'child_age',
-        'Age',
-        'age_years'
+    q13_col = find_column(df, [
+        'Q13. Age of Head of the Household',
+        'Q13',
+        'hh_head_age',
+        'age_head'
     ])
     
-    if q22_col and q17_col:
-        age_issue = df[pd.to_numeric(df[q22_col], errors='coerce') > pd.to_numeric(df[q17_col], errors='coerce')]
+    if q22_col and q13_col:
+        age_issue = df[pd.to_numeric(df[q22_col], errors='coerce') > pd.to_numeric(df[q13_col], errors='coerce')]
         for idx, row in age_issue.iterrows():
             qc_issues.append({
                 'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
-                'Issue Type': 'Age Inconsistency',
-                'Description': f'Years living ({row.get(q22_col, "N/A")}) > Age ({row.get(q17_col, "N/A")})',
+                'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
+                'Issue Type': 'Age Inconsistencies',
+                'Description': f'Years of Living ({row.get(q22_col, "N/A")}) > HH Head Age ({row.get(q13_col, "N/A")})',
                 'Row Index': idx
             })
     
@@ -640,8 +724,10 @@ def perform_qc_checks(df, child_df=None):
                 'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
+                'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'Education-Occupation Mismatch',
-                'Description': f'No formal education but professional occupation',
+                'Description': 'No formal education but professional occupation',
                 'Row Index': idx
             })
     
@@ -654,6 +740,8 @@ def perform_qc_checks(df, child_df=None):
                 'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
+                'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'Negative Children Count',
                 'Description': f'Negative value in {child_col}: {row.get(child_col, "N/A")}',
                 'Row Index': idx
@@ -668,43 +756,139 @@ def perform_qc_checks(df, child_df=None):
                 'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
+                'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'No Eligible Children',
-                'Description': f'Household has 0 eligible children',
+                'Description': 'Household has 0 eligible children',
                 'Row Index': idx
             })
     
-    # QC Check 5: Check child_infoo sheet if provided
+    # QC Check 5: Check child_infoo sheet if provided (children 1-59 months)
     if child_df is not None and not child_df.empty:
-        # Q90: Age check (>59 months flag)
-        q90_col = find_column(child_df, ['Q90. Did someone offer child ${child_idd} azithromycin between 24th and 29th of July 2025?',
-                                         'Q90', 'azithromycin_offered', 'child_age_months'])
-        if q90_col:
-            age_over_59 = child_df[pd.to_numeric(child_df[q90_col], errors='coerce') > 59]
-            for idx, row in age_over_59.iterrows():
+        # Find child sheet columns
+        age_col = find_column(child_df, [
+            'Q88. Child name and age ${child_idd} as at when MDA was done (19th to 25th July 2025)',
+            'age_months',
+            'child_age'
+        ])
+        q94_col = find_column(child_df, [
+            'Q94. Did child ${child_idd} swallow the AZM offered?',
+            'Q94',
+            'child_swallow_azm'
+        ])
+        q95_col = find_column(child_df, [
+            'Q95. Did child ${child_idd} swallow the AZM in the presence of the person who offered it?',
+            'Q95',
+            'swallow_in_presence'
+        ])
+        q102_col = find_column(df, [
+            'Q102. About how many minutes did the CDD spend in your household?',
+            'Q102',
+            'cdd_time_minutes'
+        ])
+        
+        # Check Q94 (child swallowed AZM) AND child age >59 months
+        if age_col and q94_col:
+            swallowed_over_59 = child_df[
+                (pd.to_numeric(child_df[age_col], errors='coerce') > 59) &
+                (child_df[q94_col].astype(str).str.contains('Yes', case=False, na=False))
+            ]
+            for idx, row in swallowed_over_59.iterrows():
+                submission_uuid = row.get('_submission__uuid', 'N/A')
+                parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
                 qc_issues.append({
-                    'LGA': 'Check child_infoo',
-                    'Ward': 'Check child_infoo',
-                    'Community': 'Check child_infoo',
-                    'Issue Type': 'Child Age >59 months',
-                    'Description': f'Child age >59 months: {row.get(q90_col, "N/A")}',
+                    'LGA': parent_info['LGA'],
+                    'Ward': parent_info['Ward'],
+                    'Community': parent_info['Community'],
+                    'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                    'Validation Status': parent_info.get('Validation Status', 'N/A'),
+                    'Issue Type': 'Q94 Yes & Child Age >59 months',
+                    'Description': f'Child {row.get("child_idd", "N/A")} aged {row.get(age_col, "N/A")} months (>59) swallowed AZM (unique_code2: {row.get("unique_code2", "N/A")})',
                     'Row Index': idx
                 })
         
-        # Check for duplicate unique_code2
+        # Check Q95 (swallowed in presence) AND Q102 = 0 minutes
+        if q95_col and q102_col:
+            for idx_child, child_row in child_df.iterrows():
+                submission_uuid = child_row.get('_submission__uuid', 'N/A')
+                # Find matching parent record
+                if uuid_col and submission_uuid != 'N/A':
+                    parent_row = df[df[uuid_col] == submission_uuid]
+                    if not parent_row.empty:
+                        q102_val = pd.to_numeric(parent_row.iloc[0].get(q102_col, -1), errors='coerce')
+                        q95_val = str(child_row.get(q95_col, '')).strip()
+                        
+                        if 'yes' in q95_val.lower() and q102_val == 0:
+                            parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
+                            qc_issues.append({
+                                'LGA': parent_info['LGA'],
+                                'Ward': parent_info['Ward'],
+                                'Community': parent_info['Community'],
+                                'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                                'Validation Status': parent_info.get('Validation Status', 'N/A'),
+                                'Issue Type': 'Q95 Yes & Q102 = 0 minutes',
+                                'Description': f'Child {child_row.get("child_idd", "N/A")} swallowed in presence but CDD time = 0 min (unique_code2: {child_row.get("unique_code2", "N/A")})',
+                                'Row Index': idx_child
+                            })
+        
+        # Check Q95 (swallowed in presence) AND Q102 >= 100 minutes
+        if q95_col and q102_col:
+            for idx_child, child_row in child_df.iterrows():
+                submission_uuid = child_row.get('_submission__uuid', 'N/A')
+                # Find matching parent record
+                if uuid_col and submission_uuid != 'N/A':
+                    parent_row = df[df[uuid_col] == submission_uuid]
+                    if not parent_row.empty:
+                        q102_val = pd.to_numeric(parent_row.iloc[0].get(q102_col, -1), errors='coerce')
+                        q95_val = str(child_row.get(q95_col, '')).strip()
+                        
+                        if 'yes' in q95_val.lower() and q102_val >= 100:
+                            parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
+                            qc_issues.append({
+                                'LGA': parent_info['LGA'],
+                                'Ward': parent_info['Ward'],
+                                'Community': parent_info['Community'],
+                                'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                                'Validation Status': parent_info.get('Validation Status', 'N/A'),
+                                'Issue Type': 'Q95 Yes & Q102 >= 100 minutes',
+                                'Description': f'Child {child_row.get("child_idd", "N/A")} swallowed in presence but CDD time = {q102_val} min (>=100) (unique_code2: {child_row.get("unique_code2", "N/A")})',
+                                'Row Index': idx_child
+                            })
+        
+        # Check for duplicate unique_code2 (child duplicate)
         unique_code2_col = find_column(child_df, ['unique_code2', 'unique_code_2', 'child_unique_code'])
         if unique_code2_col:
             duplicates = child_df[child_df.duplicated(subset=[unique_code2_col], keep=False)]
             for idx, row in duplicates.iterrows():
+                submission_uuid = row.get('_submission__uuid', 'N/A')
+                parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
                 qc_issues.append({
-                    'LGA': 'Check child_infoo',
-                    'Ward': 'Check child_infoo',
-                    'Community': 'Check child_infoo',
-                    'Issue Type': 'Child Duplicate',
+                    'LGA': parent_info['LGA'],
+                    'Ward': parent_info['Ward'],
+                    'Community': parent_info['Community'],
+                    'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                    'Validation Status': parent_info.get('Validation Status', 'N/A'),
+                    'Issue Type': 'Child Duplicate (unique_code2)',
                     'Description': f'Duplicate unique_code2: {row.get(unique_code2_col, "N/A")}',
                     'Row Index': idx
                 })
     
-    # QC Check 6: Urban settlement without basic amenities (batch check by enumerator)
+    # QC Check 6: Duplicate unique_code (HH Duplicate)
+    if unique_code_col:
+        duplicates = df[df.duplicated(subset=[unique_code_col], keep=False)]
+        for idx, row in duplicates.iterrows():
+            qc_issues.append({
+                'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
+                'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
+                'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
+                'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
+                'Issue Type': 'HH Duplicate (unique_code)',
+                'Description': f'Duplicate unique_code: {row.get(unique_code_col, "N/A")}',
+                'Row Index': idx
+            })
+    
+    # QC Check 7: Urban settlement without basic amenities (batch check by enumerator)
     settlement_col = find_column(df, ['Q5. Type of Settlement', 'Q5', 'settlement_type', 'settlement'])
     enumerator_col = find_column(df, ['username', 'Type in your Name', 'Enumerator', 'enumerator_name'])
     amenity_cols = ['Q23. Electricity', 'Q24. Radio', 'Q25. Television', 'Q26. A non-mobile telephone',
@@ -751,24 +935,12 @@ def perform_qc_checks(df, child_df=None):
                                     'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
                                     'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                                     'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
+                                    'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                                    'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                                     'Issue Type': 'Urban HH No Amenities (Enumerator Pattern)',
                                     'Description': f'Enumerator "{enumerator}" - ALL {len(group)} urban records have NO amenities',
                                     'Row Index': idx
                                 })
-    
-    # QC Check 7: Duplicate unique_code (HH Duplicate)
-    unique_code_col = find_column(df, ['unique_code', 'unique_code_1', 'household_code'])
-    if unique_code_col:
-        duplicates = df[df.duplicated(subset=[unique_code_col], keep=False)]
-        for idx, row in duplicates.iterrows():
-            qc_issues.append({
-                'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
-                'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
-                'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
-                'Issue Type': 'HH Duplicate',
-                'Description': f'Duplicate unique_code: {row.get(unique_code_col, "N/A")}',
-                'Row Index': idx
-            })
     
     # Convert to DataFrame
     qc_df = pd.DataFrame(qc_issues)
@@ -783,16 +955,15 @@ def perform_qc_checks(df, child_df=None):
 
 
 # ---------------- LOGIN FUNCTIONS ----------------
-def check_login(username, password):
+def check_login(username):
     username_lower = username.lower().strip()
     
-    if username_lower == ADMIN_USERNAME.lower() and password == ADMIN_PASSWORD:
+    if username_lower == ADMIN_USERNAME.lower():
         return 'admin', None
     
     if username_lower in LGA_CREDENTIALS:
-        correct_password, lga_name = LGA_CREDENTIALS[username_lower]
-        if password == correct_password:
-            return 'lga', lga_name
+        lga_name = LGA_CREDENTIALS[username_lower]
+        return 'lga', lga_name
     
     return None, None
 
@@ -813,20 +984,33 @@ def login_page():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        with st.form("login_form"):
-            st.markdown("<p style='text-align: center; color: #666; margin-bottom: 1.5rem;'>Enter your credentials to continue(Type *Admin* in userName and Password to get access to the App) </p>", unsafe_allow_html=True)
+        # Collapsible Login hint - outside the form
+        with st.expander("🔑 Click here to view available usernames", expanded=False):
+            st.markdown("""
+            **Admin Access:**
+            - Username: `Admin`
             
-            username = st.text_input("👤 Username", placeholder="Enter your username")
-            password = st.text_input("🔑 Password", type="password", placeholder="Enter your password")
+            **LGA Users:**
+            - `kware`, `rabah`, `tureta`, `wamakko`, `gada`, `yabo`
+            
+            *Simply enter your username to access the dashboard.*
+            """)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            st.markdown("<p style='text-align: center; color: #666; margin-bottom: 1.5rem;'>Enter your username to continue</p>", unsafe_allow_html=True)
+            
+            username = st.text_input("👤 Username", placeholder="Enter your username (e.g., Admin or kware)")
             
             st.markdown("<br>", unsafe_allow_html=True)
             submit = st.form_submit_button("🚀 Login to Dashboard", use_container_width=True)
             
             if submit:
-                if not username or not password:
-                    st.error("⚠️ Please enter both username and password")
+                if not username:
+                    st.error("⚠️ Please enter your username")
                 else:
-                    access_level, lga_filter = check_login(username, password)
+                    access_level, lga_filter = check_login(username)
                     if access_level:
                         st.session_state['logged_in'] = True
                         st.session_state['access_level'] = access_level
@@ -835,7 +1019,7 @@ def login_page():
                         st.success("✅ Login successful! Redirecting...")
                         st.rerun()
                     else:
-                        st.error("❌ Invalid username or password. Please try again.")
+                        st.error("❌ Invalid username. Please try again.")
 
 
 # ---------------- MAIN DASHBOARD ----------------
@@ -845,19 +1029,22 @@ def run_dashboard():
     # Enhanced Header
     st.markdown("""
     <div class="main-header">
-        <div style='font-size: 3rem; margin-bottom: 0.5rem;'>📊</div>
-        SARMAAN II Coverage Evaluation - KANO STATE
+        <div style='font-size: 3rem; margin-bottom: 0.5rem;'></div>
+        SARMAAN II Coverage Evaluation
         <div style='font-size: 1.2rem; font-weight: 500; opacity: 0.9; margin-top: 0.5rem; letter-spacing: 2px;'>
             DATA ANALYTICS DASHBOARD
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Load data first
-    df = load_data_from_kobo()
+    # Load data first - now returns dictionary of sheets
+    sheets_dict = load_data_from_kobo()
     
-    if df is not None and not df.empty:
-        df = preprocess_data(df)
+    if sheets_dict and not sheets_dict['main'].empty:
+        sheets_dict = preprocess_data(sheets_dict)
+    
+    # Extract main sheet for compatibility with existing code
+    df = sheets_dict['main'] if sheets_dict else pd.DataFrame()
     
     # Sidebar with Filters
     with st.sidebar:
@@ -926,13 +1113,20 @@ def run_dashboard():
         # Find column names (including plural forms)
         lga_col = find_column(filtered_df, ['lgas', 'lga', 'Q2. Local Government Area', 'LGA', 'Local Government Area', 'Lgas'])
         ward_col = find_column(filtered_df, ['wards', 'ward', 'Q3.Ward', 'Q3. Ward', 'Ward', 'Wards'])
-        community_col = find_column(filtered_df, ['Q4. Community Name', 'community', 'Community', 'Community Name'])
+        community_col = find_column(filtered_df, ['Community Name', 'Q4. Community Name', 'community', 'Community'])
         status_col = find_column(filtered_df, ['_validation_status', 'validation_status', 'Validation Status'])
         date_col = find_column(filtered_df, ['Q8. Date', '_submission_time', 'start', 'Date', 'date', 'submission_time'])
         
-        # Apply LGA filter for non-admin users
+        # Apply LGA filter for non-admin users (case-insensitive comparison)
         if st.session_state.get('access_level') == 'lga' and st.session_state.get('lga_filter') and lga_col:
-            filtered_df = filtered_df[filtered_df[lga_col] == st.session_state['lga_filter']]
+            # Case-insensitive filtering
+            lga_filter_value = st.session_state['lga_filter']
+            filtered_df = filtered_df[filtered_df[lga_col].astype(str).str.lower() == lga_filter_value.lower()]
+            
+            # Debug info for LGA users
+            if filtered_df.empty:
+                st.sidebar.warning(f"⚠️ No data found for LGA: {lga_filter_value}")
+                st.sidebar.info(f"Available LGAs in dataset: {', '.join(df[lga_col].dropna().unique().tolist())}")
         
         # LGA Filter (only for admin)
         if st.session_state.get('access_level') == 'admin' and not filtered_df.empty and lga_col:
@@ -1014,29 +1208,29 @@ def run_dashboard():
         st.markdown('<div class="section-header">✅ Validation & Quality Control Status</div>', unsafe_allow_html=True)
         vcol1, vcol2, vcol3 = st.columns(3)
         with vcol1:
-            st.markdown(f"""
-            <div class="metric-card card-green">
-                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>✓</div>
-                <div class="metric-value">{metrics['approved']:,}</div>
-                <div class="metric-label">Approved Submissions</div>
+            st.markdown("""
+            <div class="metric-card card-green" style="min-height: 100px; padding: 1.2rem 1rem;">
+                <div style='font-size: 2rem; margin-bottom: 0.3rem;'>✓</div>
+                <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
+                <div class="metric-label" style="font-size: 0.8rem;">Approved Submissions</div>
             </div>
-            """, unsafe_allow_html=True)
+            """.format(metrics['approved']), unsafe_allow_html=True)
         with vcol2:
-            st.markdown(f"""
-            <div class="metric-card card-orange">
-                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>⏳</div>
-                <div class="metric-value">{metrics['pending']:,}</div>
-                <div class="metric-label">Awaiting Review</div>
+            st.markdown("""
+            <div class="metric-card card-orange" style="min-height: 100px; padding: 1.2rem 1rem;">
+                <div style='font-size: 2rem; margin-bottom: 0.3rem;'>⏳</div>
+                <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
+                <div class="metric-label" style="font-size: 0.8rem;">Awaiting Review</div>
             </div>
-            """, unsafe_allow_html=True)
+            """.format(metrics['pending']), unsafe_allow_html=True)
         with vcol3:
-            st.markdown(f"""
-            <div class="metric-card card-red">
-                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>✗</div>
-                <div class="metric-value">{metrics['rejected']:,}</div>
-                <div class="metric-label">Rejected Submissions</div>
+            st.markdown("""
+            <div class="metric-card card-red" style="min-height: 100px; padding: 1.2rem 1rem;">
+                <div style='font-size: 2rem; margin-bottom: 0.3rem;'>✗</div>
+                <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
+                <div class="metric-label" style="font-size: 0.8rem;">Not Approved</div>
             </div>
-            """, unsafe_allow_html=True)
+            """.format(metrics['rejected']), unsafe_allow_html=True)
     
     # Data Quality Alerts
     issues = identify_data_quality_issues(filtered_df)
@@ -1047,109 +1241,132 @@ def run_dashboard():
             icon = "⚠️" if issue['type'] == 'warning' else "❌"
             st.markdown(f'<div class="alert-box {alert_class}"><strong>{icon} {issue["message"]}</strong></div>', unsafe_allow_html=True)
     
-    # Community Coverage Analysis
-    st.markdown('<div class="section-header">📋 Community Coverage Analysis (Planned vs Actual)</div>', unsafe_allow_html=True)
+    # Data Explorer - Advanced Table with Planned vs Reached HH (MOVED FIRST)
+    st.markdown('<div class="section-header">📋 Coverage Summary: Planned vs Reached Households</div>', unsafe_allow_html=True)
     
-    coverage_table = create_community_coverage_table(filtered_df)
+    # Get community column
+    q4_col = find_column(filtered_df, ['Q4. Community Name', 'community', 'community_name'])
+    lga_col = find_column(filtered_df, ['Q2. Local Government Area', 'lga', 'LGA'])
+    ward_col = find_column(filtered_df, ['Q3.Ward', 'Q3. Ward', 'ward', 'Ward'])
     
-    if coverage_table is not None:
-        # Summary stats
-        col1, col2, col3, col4 = st.columns(4)
-        total_communities = len(coverage_table)
-        completed = (coverage_table['Actual_HH'] >= coverage_table['Planned HH']).sum()
-        partial = ((coverage_table['Actual_HH'] > 0) & (coverage_table['Actual_HH'] < coverage_table['Planned HH'])).sum()
-        not_started = (coverage_table['Actual_HH'] == 0).sum()
+    if q4_col and not filtered_df.empty:
+        # Group by LGA, Ward, Community and count households
+        explorer_data = []
         
-        with col1:
-            st.metric("Total Communities", f"{total_communities:,}")
-        with col2:
-            st.metric("✅ Completed", f"{completed:,}", delta=f"{(completed/total_communities*100):.1f}%")
-        with col3:
-            st.metric("⚠️ Partial", f"{partial:,}", delta=f"{(partial/total_communities*100):.1f}%")
-        with col4:
-            st.metric("❌ Not Started", f"{not_started:,}", delta=f"{(not_started/total_communities*100):.1f}%")
+        for lga in filtered_df[lga_col].unique() if lga_col else ['N/A']:
+            lga_df = filtered_df[filtered_df[lga_col] == lga] if lga_col else filtered_df
+            
+            for ward in lga_df[ward_col].unique() if ward_col else ['N/A']:
+                ward_df = lga_df[lga_df[ward_col] == ward] if ward_col else lga_df
+                
+                for community_code in ward_df[q4_col].unique():
+                    if pd.notna(community_code):
+                        # Get community name from mapping
+                        community_name = COMMUNITY_CODE_TO_NAME.get(str(community_code), str(community_code))
+                        
+                        # Get planned HH
+                        planned_hh = COMMUNITY_PLANNED_HH.get(str(community_code), 0)
+                        
+                        # Count reached HH
+                        reached_hh = len(ward_df[ward_df[q4_col] == community_code])
+                        
+                        # Calculate percentage
+                        coverage_pct = (reached_hh / planned_hh * 100) if planned_hh > 0 else 0
+                        
+                        # Status
+                        if reached_hh >= planned_hh:
+                            status = "✅ Target Met"
+                            status_color = "green"
+                        elif reached_hh > 0:
+                            status = "⚠️ In Progress"
+                            status_color = "red"
+                        else:
+                            status = "❌ Not Started"
+                            status_color = "red"
+                        
+                        explorer_data.append({
+                            'LGA': lga,
+                            'Ward': ward,
+                            'Community': community_name,
+                            'Planned HH': planned_hh,
+                            'Reached HH': reached_hh,
+                            'Coverage %': round(coverage_pct, 1),
+                            'Status': status,
+                            'Status_Color': status_color
+                        })
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Display coverage table
-        display_coverage = coverage_table[[
-            'Q2. Local Government Area', 'Q3.Ward', 'Q4. Community Name', 'community_name',
-            'Planned HH', 'Actual_HH', 'Coverage_%', 'Status'
-        ]].rename(columns={
-            'Q2. Local Government Area': 'LGA',
-            'Q3.Ward': 'Ward',
-            'Q4. Community Name': 'Community Name',
-            'community_name': 'Community Code',
-            'Planned HH': 'Planned HH',
-            'Actual_HH': 'Actual HH',
-            'Coverage_%': 'Coverage %'
-        })
-        
-        # Color code based on status
-        def highlight_status(row):
-            if row['Status'] == '✅ Complete':
-                return ['background-color: #d1fae5'] * len(row)
-            elif row['Status'] == '⚠️ Partial':
-                return ['background-color: #fef3c7'] * len(row)
-            else:
-                return ['background-color: #fee2e2'] * len(row)
-        
-        st.dataframe(
-            display_coverage.style.apply(highlight_status, axis=1),
-            use_container_width=True,
-            hide_index=True,
-            height=400
-        )
+        if explorer_data:
+            explorer_df = pd.DataFrame(explorer_data)
+            
+            # Summary metrics
+            exp_col1, exp_col2, exp_col3, exp_col4 = st.columns(4)
+            
+            total_planned = explorer_df['Planned HH'].sum()
+            total_reached = explorer_df['Reached HH'].sum()
+            overall_coverage = (total_reached / total_planned * 100) if total_planned > 0 else 0
+            communities_met_target = len(explorer_df[explorer_df['Status_Color'] == 'green'])
+            
+            with exp_col1:
+                st.metric("Total Planned HH", f"{total_planned:,}")
+            with exp_col2:
+                st.metric("Total Reached HH", f"{total_reached:,}")
+            with exp_col3:
+                st.metric("Overall Coverage", f"{overall_coverage:.1f}%")
+            with exp_col4:
+                st.metric("Communities @ Target", f"{communities_met_target}/{len(explorer_df)}")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Display table with color coding
+            st.markdown("### 📝 Detailed Coverage Table")
+            
+            # Remove the Status_Color column for display
+            display_explorer_df = explorer_df.drop(columns=['Status_Color'])
+            
+            # Apply styling using the original dataframe's Status_Color column
+            st.dataframe(
+                display_explorer_df.style.apply(
+                    lambda row: ['background-color: #d1fae5'] * len(row) 
+                    if explorer_df.loc[row.name, 'Status_Color'] == 'green' 
+                    else ['background-color: #fee2e2'] * len(row), 
+                    axis=1
+                ),
+                use_container_width=True,
+                height=500,
+                hide_index=True
+            )
+        else:
+            st.info("📊 Data explorer will populate when community data is available")
     else:
-        st.info("📊 Community coverage analysis will appear when data is available")
+        st.info("📊 Data explorer requires community column in the dataset")
     
-    # Visualizations
-    st.markdown('<div class="section-header">📊 Interactive Data Visualizations</div>', unsafe_allow_html=True)
+    # Approval Section - QC Checks (NOW BELOW DATA EXPLORER)
+    st.markdown('<div class="section-header">Quality Control Checks</div>', unsafe_allow_html=True)
     
-    # Row 1
-    chart_col1, chart_col2 = st.columns(2)
-    with chart_col1:
-        fig = create_lga_distribution_chart(filtered_df)
-        if fig:
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("LGA distribution chart will appear when data is available")
-    
-    with chart_col2:
-        fig = create_timeline_chart(filtered_df)
-        if fig:
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("Timeline chart will appear when data is available")
-    
-    # QC Checks Section
-    st.markdown('<div class="section-header">🔍 Quality Control Checks</div>', unsafe_allow_html=True)
-    
-    # Perform QC checks
-    qc_results = perform_qc_checks(filtered_df)
+    # Perform QC checks - pass main sheet and child_infoo sheet
+    child_infoo_df = sheets_dict.get('child_infoo', pd.DataFrame()) if sheets_dict else pd.DataFrame()
+    qc_results = perform_qc_checks(filtered_df, child_df=child_infoo_df)
     
     if not qc_results.empty:
         # Summary metrics
-        st.markdown("### 📋 QC Summary")
         qc_col1, qc_col2, qc_col3, qc_col4 = st.columns(4)
         
         with qc_col1:
             st.metric("Total Issues Found", len(qc_results), delta=None)
         with qc_col2:
-            age_issues = len(qc_results[qc_results['Issue Type'] == 'Age Inconsistency'])
+            age_issues = len(qc_results[qc_results['Issue Type'] == 'Age Inconsistencies'])
             st.metric("Age Inconsistencies", age_issues)
         with qc_col3:
             duplicates = len(qc_results[qc_results['Issue Type'].str.contains('Duplicate', na=False)])
             st.metric("Duplicates", duplicates)
         with qc_col4:
-            other_issues = len(qc_results[~qc_results['Issue Type'].isin(['Age Inconsistency']) & 
+            other_issues = len(qc_results[~qc_results['Issue Type'].isin(['Age Inconsistencies']) & 
                                           ~qc_results['Issue Type'].str.contains('Duplicate', na=False)])
             st.metric("Other Issues", other_issues)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Issue breakdown by type
-        st.markdown("### 📊 Issues by Type")
         issue_counts = qc_results['Issue Type'].value_counts().reset_index()
         issue_counts.columns = ['Issue Type', 'Count']
         
@@ -1199,6 +1416,10 @@ def run_dashboard():
         if selected_lgas_qc:
             filtered_qc = filtered_qc[filtered_qc['LGA'].isin(selected_lgas_qc)]
         
+        # Remove Row Index column before displaying
+        if 'Row Index' in filtered_qc.columns:
+            filtered_qc = filtered_qc.drop(columns=['Row Index'])
+        
         # Display filtered QC table
         st.dataframe(
             filtered_qc,
@@ -1208,20 +1429,11 @@ def run_dashboard():
                 "LGA": st.column_config.TextColumn("LGA", width="small"),
                 "Ward": st.column_config.TextColumn("Ward", width="small"),
                 "Community": st.column_config.TextColumn("Community", width="medium"),
+                "Unique HH ID": st.column_config.TextColumn("Unique HH ID", width="medium"),
+                "Validation Status": st.column_config.TextColumn("Validation Status", width="small"),
                 "Issue Type": st.column_config.TextColumn("Issue Type", width="medium"),
-                "Description": st.column_config.TextColumn("Description", width="large"),
-                "Row Index": st.column_config.NumberColumn("Row Index", width="small")
+                "Description": st.column_config.TextColumn("Description", width="large")
             }
-        )
-        
-        # Download QC report
-        qc_csv = filtered_qc.to_csv(index=False)
-        st.download_button(
-            label="📥 Download QC Report",
-            data=qc_csv,
-            file_name=f"qc_report_{date.today()}.csv",
-            mime="text/csv",
-            use_container_width=False
         )
         
         # QC recommendations
@@ -1231,11 +1443,7 @@ def run_dashboard():
         - 🔴 **High Priority:** Review all Age Inconsistencies and Duplicates immediately
         - 🟡 **Medium Priority:** Verify Education-Occupation mismatches and Urban HH without amenities
         - 🟢 **Low Priority:** Check households without eligible children (may be legitimate)
-        
-        **Tips:**
-        - Use Row Index to locate specific records in your raw data
-        - Export QC report for sharing with field teams
-        - Address duplicates before final data submission
+
         """)
     else:
         st.success("✅ **No QC issues found!** All data quality checks passed successfully.")
@@ -1275,42 +1483,11 @@ def run_dashboard():
                 col_list = list(filtered_df.columns[:20])  # Show first 20 columns
                 for col in col_list:
                     st.write(f"  - {col}")
-                if len(filtered_df.columns) > 20:
-                    st.write(f"  ... and {len(filtered_df.columns) - 20} more columns")
-            else:
-                st.warning("No data in filtered dataset. Check your filters!")
-    
-    # Data Explorer
-    st.markdown('<div class="section-header">🔍 Advanced Data Explorer</div>', unsafe_allow_html=True)
-    
-    st.write(f"Showing **{len(filtered_df):,}** of **{len(df):,}** records")
-    
-    if not filtered_df.empty:
-        # Try to find common display columns using flexible matching (including plural forms)
-        possible_display_cols = [
-            ['lgas', 'lga', 'Q2. Local Government Area', 'LGA', 'Lgas'],
-            ['wards', 'ward', 'Q3.Ward', 'Q3. Ward', 'Ward', 'Wards'],
-            ['Q4. Community Name', 'community', 'Community'],
-            ['Q8. Date', 'start', 'Date', 'date'],
-            ['username', 'Type in your Name', 'Enumerator'],
-            ['_validation_status', 'validation_status']
-        ]
-        
-        display_cols = []
-        for col_options in possible_display_cols:
-            col = find_column(filtered_df, col_options)
-            if col:
-                display_cols.append(col)
-        
-        if display_cols:
-            st.dataframe(filtered_df[display_cols], use_container_width=True, height=400)
-        else:
-            st.dataframe(filtered_df.head(100), use_container_width=True, height=400)
     
     # Footer
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    st.markdown(f"""
+    st.markdown("""
     <div style='text-align: center; padding: 2rem; margin-top: 2rem;
                 background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
                 border-radius: 15px;
