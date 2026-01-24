@@ -1,5 +1,5 @@
 # =============================================================================
-# SARMAAN II COVERAGE EVALUATION DASHBOARD - KANO STATE
+# SARMAAN II COVERAGE EVALUATION DASHBOARD - Katsina STATE
 # =============================================================================
 
 import streamlit as st
@@ -21,43 +21,43 @@ ADMIN_USERNAME = "Admin"
 
 # LGA username to LGA name mapping (no passwords needed)
 LGA_CREDENTIALS = {
-    "kware": "Kware",
-    "rabah": "Rabah",
-    "tureta": "Tureta",
-    "wamakko": "Wamakko",
-    "gada": "Gada",
-    "yabo": "Yabo",
+    "ingawa": "Ingawa",
+    "kankara": "Kankara",
+    "kankia": "Kankia",
+    "mani": "Mani",
+    "musawa": "Musawa",
+    "rimi": "Rimi",
 }
 
 
-KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/anEFHiaTjMTpPbmayazSNQ/export-settings/esYBsyuHSRzKFJ9hB8Q9vUy/data.xlsx"
+KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/ahaqJZxr7kvAbYRje7GMeP/export-settings/esmSMyurMwphmn8cFPFN4WQ/data.xlsx"
 
 # ---------------- COMMUNITY MAPPING DATA ----------------
 COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	community_name	Q4. Community Name	Planned HH
-Kware	Tunga Mallamawa	70111	Tsalibawa	29
-Kware	Tunga Mallamawa	70112	Gebawa_C	30
-Kware	Bankanu	70121	Runji	49
-Kware	Bankanu	70122	Shiyar_Yar_Kofa	19
-Rabah	Rabah	70211	Ubandawaki_A	20
-Rabah	Rabah	70212	Galadima_A	21
-Rabah	Maikujera	70221	Shiyar_Galadima_H_Shida	22
-Rabah	Maikujera	70222	Gidan_Danayya	29
-Tureta	Tureta	70311	Dan_Fil	59
-Tureta	Tureta	70312	Gangamawa_Dorowa	69
-Tureta	Lofa	70321	Gidan_Gulbi	89
-Tureta	Lofa	70322	Lofa_Tudaadanni	82
-Wamakko	Gumbi	70411	Shiyar_Samna_A	19
-Wamakko	Gumbi	70412	Kauran_Malam_Alasan	80
-Wamakko	Bado	70421	Alu_Quarters_Gabas	94
-Wamakko	Bado	70422	C_O_E	59
-Gada	Gada	70511	Bigal	67
-Gada	Gada	70512	Marmaro	89
-Gada	Kyadawa Holai	70521	Danbirema	10
-Gada	Kyadawa Holai	70522	Dantudun_Gidan_Amamata	40
-Yabo	Yabo B	70611	Baware_Shiyar_Lelaba	39
-Yabo	Yabo B	70612	Shiyar_Wambai_Danfili	39
-Yabo	Yabo A	70621	Rugar_Fako	49
-Yabo	Yabo A	70622	Mazaren_Gabas	78"""
+Ingawa	Agayawa	80111	Mattallawa Unguwan Huri	30
+Ingawa	Agayawa	80112	Yallami Gabas	30
+Ingawa	Bareruwa	80121	Santa Ruruma	30
+Ingawa	Bareruwa	80122	Kuringihi	30
+Kankara	Burdugau	80211	Sunkui Sabauwa	30
+Kankara	Burdugau	80212	Dankalgo Layin Rabe	30
+Kankara	Dan Murabu	80221	Tsamiyar Sarki	30
+Kankara	Dan Murabu	80222	Matsiga Kudu	30
+Kankia	Fakuwa Kafin Dangi	80311	Rugar Allo	30
+Kankia	Fakuwa Kafin Dangi	80312	Yamade	30
+Kankia	Galadima A	80321	Bakin Kasuwar Halilu	30
+Kankia	Galadima A	80322	Kauyen Dawa Layin Labo	30
+Mani	Bagiwa	80411	Nasarawa Kainawa	30
+Mani	Bagiwa	80412	Dungun Agala	30
+Mani	Bujawa	80421	Kwangwama Galadinawa	30
+Mani	Bujawa	80422	Nasarawa Bagawa	30
+Musawa	Garu	80511	Gangara	30
+Musawa	Garu	80512	Garu Unguwar Gabas	30
+Musawa	Danjanku Karachi	80521	Gidan Lumu	30
+Musawa	Danjanku Karachi	80522	Alkalawa	30
+Rimi	Abukur	80611	Bayan Garin Malam Yau	30
+Rimi	Abukur	80612	Bayan Garin Malam Basiru	30
+Rimi	Fardami	80621	Makwalla Akatsaba	30
+Rimi	Fardami	80622	Fardami Layin Sada Fari	30"""
 
 # Parse community mapping data
 COMMUNITY_DF = pd.read_csv(StringIO(COMMUNITY_MAPPING_DATA), sep='\t')
@@ -245,17 +245,191 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Responsive Design */
-    @media (max-width: 768px) {
+    /* Mobile-First Responsive Design */
+    
+    /* Tablets and small laptops (768px - 1024px) */
+    @media (max-width: 1024px) {
         .main-header {
-            font-size: 2rem;
+            font-size: 2.2rem;
             padding: 1.5rem 1rem;
+        }
+        .metric-card {
+            padding: 1.5rem 0.8rem;
+            min-height: 120px;
         }
         .metric-value {
             font-size: 2rem;
         }
+        .metric-label {
+            font-size: 0.75rem;
+        }
         .section-header {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
+            padding: 0.8rem 1rem;
+        }
+        .alert-box {
+            padding: 1rem 1.2rem;
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Mobile devices (max-width: 768px) */
+    @media (max-width: 768px) {
+        /* Make app container full width on mobile */
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 1rem;
+            max-width: 100%;
+        }
+        
+        /* Header adjustments */
+        .main-header {
+            font-size: 1.6rem;
+            padding: 1.2rem 0.8rem;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+        }
+        
+        /* Metric cards stack better on mobile */
+        .metric-card {
+            padding: 1.2rem 0.8rem;
+            margin: 0.5rem 0;
+            min-height: 100px;
+            border-radius: 12px;
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .metric-label {
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+        
+        /* Section headers */
+        .section-header {
+            font-size: 1.2rem;
+            padding: 0.8rem 1rem;
+            margin: 1.5rem 0 1rem 0;
+            border-radius: 10px;
+        }
+        
+        /* Alert boxes */
+        .alert-box {
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 10px;
+        }
+        
+        /* Buttons */
+        .stButton > button {
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            border-radius: 10px;
+        }
+        
+        /* Make tables scrollable on mobile */
+        .dataframe {
+            font-size: 0.75rem;
+            overflow-x: auto;
+        }
+        
+        /* Adjust sidebar on mobile */
+        section[data-testid="stSidebar"] {
+            width: 280px;
+        }
+        
+        /* Make columns stack on mobile */
+        .row-widget.stHorizontal {
+            flex-direction: column;
+        }
+    }
+    
+    /* Small mobile devices (max-width: 480px) */
+    @media (max-width: 480px) {
+        .main-header {
+            font-size: 1.4rem;
+            padding: 1rem 0.5rem;
+        }
+        
+        .metric-card {
+            padding: 1rem 0.5rem;
+            min-height: 90px;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+        }
+        
+        .metric-label {
+            font-size: 0.65rem;
+        }
+        
+        .section-header {
+            font-size: 1.1rem;
+            padding: 0.7rem 0.8rem;
+        }
+        
+        .alert-box {
+            padding: 0.7rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        .stButton > button {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Reduce padding on very small screens */
+        .main .block-container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+    
+    /* Landscape mode optimization for mobile */
+    @media (max-width: 896px) and (orientation: landscape) {
+        .main-header {
+            font-size: 1.5rem;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .metric-card {
+            min-height: 80px;
+            padding: 0.8rem 0.5rem;
+        }
+        
+        .section-header {
+            font-size: 1.1rem;
+            margin: 1rem 0 0.8rem 0;
+        }
+    }
+    
+    /* Touch-friendly improvements for mobile */
+    @media (hover: none) and (pointer: coarse) {
+        /* Make buttons and interactive elements larger for touch */
+        .stButton > button {
+            min-height: 44px;
+            padding: 0.8rem 1.5rem;
+        }
+        
+        /* Increase tap targets */
+        select, input, textarea {
+            min-height: 44px;
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+        
+        /* Remove hover effects on touch devices */
+        .metric-card:hover {
+            transform: none;
+        }
+        
+        .stButton > button:hover {
+            transform: none;
         }
     }
 </style>
@@ -331,6 +505,22 @@ def preprocess_data(sheets_dict):
     
     # Process main sheet
     df_main = sheets_dict['main'].copy()
+    
+    # Clean LGA, Ward, and Community columns - remove ALL trailing non-alphanumeric characters
+    text_cols_to_clean = [
+        'Q2. Local Government Area', 'lga', 'LGA', 'lgas',
+        'Q3.Ward', 'Q3. Ward', 'ward', 'Ward', 'wards',
+        'Q4. Community Name', 'community', 'Community', 'Community Name'
+    ]
+    for col in text_cols_to_clean:
+        if col in df_main.columns:
+            # Remove the � character and other problematic characters
+            df_main[col] = df_main[col].astype(str).str.replace('�', '', regex=False)
+            # Remove any trailing whitespace and non-printable characters
+            df_main[col] = df_main[col].str.strip()
+            # Remove any remaining non-alphanumeric characters from the end (except spaces in the middle)
+            df_main[col] = df_main[col].str.replace(r'[^\w\s]+$', '', regex=True)
+            df_main[col] = df_main[col].str.strip()
     
     # Map community codes to names - Q4. Community Name contains codes, we need to map them to actual names
     if 'Q4. Community Name' in df_main.columns:
@@ -977,7 +1167,7 @@ def login_page():
             SARMAAN II Coverage Dashboard
         </h1>
         <p style='color: #666; font-size: 1.1rem; font-weight: 500;'>
-            Kano State - Secure Data Analytics Platform
+            Katsina State - Secure Data Analytics Platform
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -990,10 +1180,9 @@ def login_page():
             **Admin Access:**
             - Username: `Admin`
             
-            **LGA Users:**
-            - `kware`, `rabah`, `tureta`, `wamakko`, `gada`, `yabo`
+            **LGA Users (use lowercase):**
+            - `ingawa`, `kankara`, `kankia`, `mani`, `musawa`, `rimi`
             
-            *Simply enter your username to access the dashboard.*
             """)
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -1121,12 +1310,23 @@ def run_dashboard():
         if st.session_state.get('access_level') == 'lga' and st.session_state.get('lga_filter') and lga_col:
             # Case-insensitive filtering
             lga_filter_value = st.session_state['lga_filter']
+            
+            # Debug: Show what we're looking for
+            st.sidebar.info(f"🔍 Searching for LGA: **{lga_filter_value}**")
+            
+            # Show available LGAs in the dataset
+            available_lgas = df[lga_col].dropna().unique().tolist()
+            st.sidebar.info("📊 Available LGAs in dataset:\n" + "\n".join([f"- {lga}" for lga in sorted(available_lgas)]))
+            
+            # Perform case-insensitive filtering
             filtered_df = filtered_df[filtered_df[lga_col].astype(str).str.lower() == lga_filter_value.lower()]
             
-            # Debug info for LGA users
+            # Show results
             if filtered_df.empty:
-                st.sidebar.warning(f"⚠️ No data found for LGA: {lga_filter_value}")
-                st.sidebar.info(f"Available LGAs in dataset: {', '.join(df[lga_col].dropna().unique().tolist())}")
+                st.sidebar.error(f"❌ No data found for LGA: **{lga_filter_value}**")
+                st.sidebar.warning("⚠️ Please ensure:\n1. Data has been uploaded\n2. LGA name matches exactly\n3. You're using the correct username")
+            else:
+                st.sidebar.success(f"✅ Found {len(filtered_df)} records for **{lga_filter_value}**")
         
         # LGA Filter (only for admin)
         if st.session_state.get('access_level') == 'admin' and not filtered_df.empty and lga_col:
@@ -1203,34 +1403,33 @@ def run_dashboard():
     with col5:
         st.markdown(render_metric_card("Enumerators", metrics['total_enumerators'], "card-indigo"), unsafe_allow_html=True)
     
-    # Validation status row
-    if metrics['approved'] > 0 or metrics['pending'] > 0 or metrics['rejected'] > 0:
-        st.markdown('<div class="section-header">✅ Validation & Quality Control Status</div>', unsafe_allow_html=True)
-        vcol1, vcol2, vcol3 = st.columns(3)
-        with vcol1:
-            st.markdown("""
-            <div class="metric-card card-green" style="min-height: 100px; padding: 1.2rem 1rem;">
-                <div style='font-size: 2rem; margin-bottom: 0.3rem;'>✓</div>
-                <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
-                <div class="metric-label" style="font-size: 0.8rem;">Approved Submissions</div>
-            </div>
-            """.format(metrics['approved']), unsafe_allow_html=True)
-        with vcol2:
-            st.markdown("""
-            <div class="metric-card card-orange" style="min-height: 100px; padding: 1.2rem 1rem;">
-                <div style='font-size: 2rem; margin-bottom: 0.3rem;'>⏳</div>
-                <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
-                <div class="metric-label" style="font-size: 0.8rem;">Awaiting Review</div>
-            </div>
-            """.format(metrics['pending']), unsafe_allow_html=True)
-        with vcol3:
-            st.markdown("""
-            <div class="metric-card card-red" style="min-height: 100px; padding: 1.2rem 1rem;">
-                <div style='font-size: 2rem; margin-bottom: 0.3rem;'>✗</div>
-                <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
-                <div class="metric-label" style="font-size: 0.8rem;">Not Approved</div>
-            </div>
-            """.format(metrics['rejected']), unsafe_allow_html=True)
+    # Validation status row (always show, even with zero values)
+    st.markdown('<div class="section-header">✅ Validation & Quality Control Status</div>', unsafe_allow_html=True)
+    vcol1, vcol2, vcol3 = st.columns(3)
+    with vcol1:
+        st.markdown("""
+        <div class="metric-card card-green" style="min-height: 100px; padding: 1.2rem 1rem;">
+            <div style='font-size: 2rem; margin-bottom: 0.3rem;'>✓</div>
+            <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
+            <div class="metric-label" style="font-size: 0.8rem;">Approved Submissions</div>
+        </div>
+        """.format(metrics['approved']), unsafe_allow_html=True)
+    with vcol2:
+        st.markdown("""
+        <div class="metric-card card-orange" style="min-height: 100px; padding: 1.2rem 1rem;">
+            <div style='font-size: 2rem; margin-bottom: 0.3rem;'>⏳</div>
+            <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
+            <div class="metric-label" style="font-size: 0.8rem;">Awaiting Review</div>
+        </div>
+        """.format(metrics['pending']), unsafe_allow_html=True)
+    with vcol3:
+        st.markdown("""
+        <div class="metric-card card-red" style="min-height: 100px; padding: 1.2rem 1rem;">
+            <div style='font-size: 2rem; margin-bottom: 0.3rem;'>✗</div>
+            <div class="metric-value" style="font-size: 2.2rem;">{:,}</div>
+            <div class="metric-label" style="font-size: 0.8rem;">Not Approved</div>
+        </div>
+        """.format(metrics['rejected']), unsafe_allow_html=True)
     
     # Data Quality Alerts
     issues = identify_data_quality_issues(filtered_df)
@@ -1498,7 +1697,7 @@ def run_dashboard():
             </div>
             <div style='border-left: 2px solid #dee2e6; height: 30px;'></div>
             <div style='font-size: 0.9rem; color: #6c757d;'>
-                SARMAAN II Coverage Evaluation Dashboard - Kano State
+                SARMAAN II Coverage Evaluation Dashboard - Katsina State
             </div>
         </div>
         <div style='margin-top: 1rem; font-size: 0.85rem; color: #868e96;'>
