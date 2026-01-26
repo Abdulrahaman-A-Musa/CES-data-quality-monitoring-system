@@ -34,30 +34,30 @@ KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/ahaqJZxr7kvAbYRje7GMeP
 
 # ---------------- COMMUNITY MAPPING DATA ----------------
 COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	community_name	Q4. Community Name	Planned HH
-Ingawa	Agayawa	80111	Mattallawa Unguwan Huri	30
-Ingawa	Agayawa	80112	Yallami Gabas	30
-Ingawa	Bareruwa	80121	Santa Ruruma	30
-Ingawa	Bareruwa	80122	Kuringihi	30
-Kankara	Burdugau	80211	Sunkui Sabauwa	30
-Kankara	Burdugau	80212	Dankalgo Layin Rabe	30
-Kankara	Dan Murabu	80221	Tsamiyar Sarki	30
-Kankara	Dan Murabu	80222	Matsiga Kudu	30
-Kankia	Fakuwa Kafin Dangi	80311	Rugar Allo	30
-Kankia	Fakuwa Kafin Dangi	80312	Yamade	30
-Kankia	Galadima A	80321	Bakin Kasuwar Halilu	30
-Kankia	Galadima A	80322	Kauyen Dawa Layin Labo	30
-Mani	Bagiwa	80411	Nasarawa Kainawa	30
-Mani	Bagiwa	80412	Dungun Agala	30
-Mani	Bujawa	80421	Kwangwama Galadinawa	30
-Mani	Bujawa	80422	Nasarawa Bagawa	30
-Musawa	Garu	80511	Gangara	30
-Musawa	Garu	80512	Garu Unguwar Gabas	30
-Musawa	Danjanku Karachi	80521	Gidan Lumu	30
-Musawa	Danjanku Karachi	80522	Alkalawa	30
-Rimi	Abukur	80611	Bayan Garin Malam Yau	30
-Rimi	Abukur	80612	Bayan Garin Malam Basiru	30
-Rimi	Fardami	80621	Makwalla Akatsaba	30
-Rimi	Fardami	80622	Fardami Layin Sada Fari	30"""
+Ingawa	Agayawa	80111	Mattallawa Unguwan Huri	27
+Ingawa	Agayawa	80112	Yallami Gabas	28
+Ingawa	Bareruwa	80121	Santa Ruruma	23
+Ingawa	Bareruwa	80122	Kuringihi	23
+Kankara	Burdugau	80211	Sunkui Sabauwa	58
+Kankara	Burdugau	80212	Dankalgo Layin Rabe	59
+Kankara	Dan Murabu	80221	Tsamiyar Sarki	65
+Kankara	Dan Murabu	80222	Matsiga Kudu	36
+Kankia	Fakuwa Kafin Dangi	80311	Rugar Allo	45
+Kankia	Fakuwa Kafin Dangi	80312	Yamade	50
+Kankia	Galadima A	80321	Bakin Kasuwar Halilu	28
+Kankia	Galadima A	80322	Kauyen Dawa Layin Labo	56
+Mani	Bagiwa	80411	Nasarawa Kainawa	34
+Mani	Bagiwa	80412	Dungun Agala	32
+Mani	Bujawa	80421	Kwangwama Galadinawa	23
+Mani	Bujawa	80422	Nasarawa Bagawa	42
+Musawa	Garu	80511	Gangara	27
+Musawa	Garu	80512	Garu Unguwar Gabas	68
+Musawa	Danjanku Karachi	80521	Gidan Lumu	28
+Musawa	Danjanku Karachi	80522	Alkalawa	43
+Rimi	Abukur	80611	Bayan Garin Malam Yau	43
+Rimi	Abukur	80612	Bayan Garin Malam Basiru	27
+Rimi	Fardami	80621	Makwalla Akatsaba	41
+Rimi	Fardami	80622	Fardami Layin Sada Fari	43"""
 
 # Parse community mapping data
 COMMUNITY_DF = pd.read_csv(StringIO(COMMUNITY_MAPPING_DATA), sep='\t')
@@ -863,6 +863,7 @@ def perform_qc_checks(df, child_df=None):
     uuid_col = find_column(df, ['_uuid', 'uuid'])
     unique_code_col = find_column(df, ['unique_code', 'unique_code_1', 'household_code'])
     validation_status_col = find_column(df, ['_validation_status', 'validation_status', 'Validation Status'])
+    enumerator_col = find_column(df, ['Type in your Name', 'username', 'Enumerator', 'enumerator_name', 'enumerator'])
     
     # Create lookup dictionary for child records to get parent HH info
     parent_lookup = {}
@@ -873,7 +874,8 @@ def perform_qc_checks(df, child_df=None):
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                 'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
-                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A'
+                'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
+                'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A'
             }
     
     # QC Check 1: Q22 > Q13 (Years living > Age of HH Head)
@@ -894,6 +896,7 @@ def perform_qc_checks(df, child_df=None):
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                 'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A',
                 'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'Age Inconsistencies',
                 'Description': f'Years of Living ({row.get(q22_col, "N/A")}) > HH Head Age ({row.get(q13_col, "N/A")})',
@@ -915,6 +918,7 @@ def perform_qc_checks(df, child_df=None):
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                 'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A',
                 'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'Education-Occupation Mismatch',
                 'Description': 'No formal education but professional occupation',
@@ -931,6 +935,7 @@ def perform_qc_checks(df, child_df=None):
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                 'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A',
                 'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'Negative Children Count',
                 'Description': f'Negative value in {child_col}: {row.get(child_col, "N/A")}',
@@ -947,6 +952,7 @@ def perform_qc_checks(df, child_df=None):
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                 'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A',
                 'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'No Eligible Children',
                 'Description': 'Household has 0 eligible children',
@@ -991,6 +997,7 @@ def perform_qc_checks(df, child_df=None):
                     'Ward': parent_info['Ward'],
                     'Community': parent_info['Community'],
                     'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                    'Enumerator': parent_info.get('Enumerator', 'N/A'),
                     'Validation Status': parent_info.get('Validation Status', 'N/A'),
                     'Issue Type': 'Q94 Yes & Child Age >59 months',
                     'Description': f'Child {row.get("child_idd", "N/A")} aged {row.get(age_col, "N/A")} months (>59) swallowed AZM (unique_code2: {row.get("unique_code2", "N/A")})',
@@ -1015,6 +1022,7 @@ def perform_qc_checks(df, child_df=None):
                                 'Ward': parent_info['Ward'],
                                 'Community': parent_info['Community'],
                                 'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                                'Enumerator': parent_info.get('Enumerator', 'N/A'),
                                 'Validation Status': parent_info.get('Validation Status', 'N/A'),
                                 'Issue Type': 'Q95 Yes & Q102 = 0 minutes',
                                 'Description': f'Child {child_row.get("child_idd", "N/A")} swallowed in presence but CDD time = 0 min (unique_code2: {child_row.get("unique_code2", "N/A")})',
@@ -1039,6 +1047,7 @@ def perform_qc_checks(df, child_df=None):
                                 'Ward': parent_info['Ward'],
                                 'Community': parent_info['Community'],
                                 'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                                'Enumerator': parent_info.get('Enumerator', 'N/A'),
                                 'Validation Status': parent_info.get('Validation Status', 'N/A'),
                                 'Issue Type': 'Q95 Yes & Q102 >= 100 minutes',
                                 'Description': f'Child {child_row.get("child_idd", "N/A")} swallowed in presence but CDD time = {q102_val} min (>=100) (unique_code2: {child_row.get("unique_code2", "N/A")})',
@@ -1057,6 +1066,7 @@ def perform_qc_checks(df, child_df=None):
                     'Ward': parent_info['Ward'],
                     'Community': parent_info['Community'],
                     'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                    'Enumerator': parent_info.get('Enumerator', 'N/A'),
                     'Validation Status': parent_info.get('Validation Status', 'N/A'),
                     'Issue Type': 'Child Duplicate (unique_code2)',
                     'Description': f'Duplicate unique_code2: {row.get(unique_code2_col, "N/A")}',
@@ -1072,6 +1082,7 @@ def perform_qc_checks(df, child_df=None):
                 'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                 'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                 'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A',
                 'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                 'Issue Type': 'HH Duplicate (unique_code)',
                 'Description': f'Duplicate unique_code: {row.get(unique_code_col, "N/A")}',
@@ -1126,6 +1137,7 @@ def perform_qc_checks(df, child_df=None):
                                     'Ward': row.get(ward_col, 'N/A') if ward_col else 'N/A',
                                     'Community': row.get(community_col, 'N/A') if community_col else 'N/A',
                                     'Unique HH ID': row.get(unique_code_col, 'N/A') if unique_code_col else 'N/A',
+                                    'Enumerator': row.get(enumerator_col, 'N/A') if enumerator_col else 'N/A',
                                     'Validation Status': row.get(validation_status_col, 'N/A') if validation_status_col else 'N/A',
                                     'Issue Type': 'Urban HH No Amenities (Enumerator Pattern)',
                                     'Description': f'Enumerator "{enumerator}" - ALL {len(group)} urban records have NO amenities',
@@ -1629,6 +1641,7 @@ def run_dashboard():
                 "Ward": st.column_config.TextColumn("Ward", width="small"),
                 "Community": st.column_config.TextColumn("Community", width="medium"),
                 "Unique HH ID": st.column_config.TextColumn("Unique HH ID", width="medium"),
+                "Enumerator": st.column_config.TextColumn("Enumerator", width="medium"),
                 "Validation Status": st.column_config.TextColumn("Validation Status", width="small"),
                 "Issue Type": st.column_config.TextColumn("Issue Type", width="medium"),
                 "Description": st.column_config.TextColumn("Description", width="large")
