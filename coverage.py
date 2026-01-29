@@ -21,6 +21,7 @@ ADMIN_USERNAME = "Admin"
 
 # LGA username to LGA name mapping (no passwords needed)
 LGA_CREDENTIALS = {
+    "Katsina": "Katsina",
     "ingawa": "Ingawa",
     "kankara": "Kankara",
     "kankia": "Kankia",
@@ -30,34 +31,13 @@ LGA_CREDENTIALS = {
 }
 
 
-KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/ahaqJZxr7kvAbYRje7GMeP/export-settings/esmSMyurMwphmn8cFPFN4WQ/data.xlsx"
+KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/adaeFCYx8EYfCnB2xUaGSD/export-settings/esABciq2qXWHMdzSDnj55rL/data.xlsx"
 
 # ---------------- COMMUNITY MAPPING DATA ----------------
 COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	community_name	Q4. Community Name	Planned HH
-Ingawa	Agayawa	80111	Mattallawa Unguwan Huri	27
-Ingawa	Agayawa	80112	Yallami Gabas	28
-Ingawa	Bareruwa	80121	Santa Ruruma	23
-Ingawa	Bareruwa	80122	Kuringihi	23
-Kankara	Burdugau	80211	Sunkui Sabauwa	58
-Kankara	Burdugau	80212	Dankalgo Layin Rabe	59
-Kankara	Dan Murabu	80221	Tsamiyar Sarki	65
-Kankara	Dan Murabu	80222	Matsiga Kudu	36
-Kankia	Fakuwa Kafin Dangi	80311	Rugar Allo	45
-Kankia	Fakuwa Kafin Dangi	80312	Yamade	50
-Kankia	Galadima A	80321	Bakin Kasuwar Halilu	28
-Kankia	Galadima A	80322	Kauyen Dawa Layin Labo	56
-Mani	Bagiwa	80411	Nasarawa Kainawa	34
-Mani	Bagiwa	80412	Dungun Agala	32
-Mani	Bujawa	80421	Kwangwama Galadinawa	23
-Mani	Bujawa	80422	Nasarawa Bagawa	42
-Musawa	Garu	80511	Gangara	27
-Musawa	Garu	80512	Garu Unguwar Gabas	68
-Musawa	Danjanku Karachi	80521	Gidan Lumu	28
-Musawa	Danjanku Karachi	80522	Alkalawa	43
-Rimi	Abukur	80611	Bayan Garin Malam Yau	43
-Rimi	Abukur	80612	Bayan Garin Malam Basiru	27
-Rimi	Fardami	80621	Makwalla Akatsaba	41
-Rimi	Fardami	80622	Fardami Layin Sada Fari	43"""
+
+Katsina	Yamma	80111	Filing Polo community	34
+"""
 
 # Parse community mapping data
 COMMUNITY_DF = pd.read_csv(StringIO(COMMUNITY_MAPPING_DATA), sep='\t')
@@ -538,21 +518,32 @@ def preprocess_data(sheets_dict):
     # Process child_info sheet
     if not sheets_dict['child_info'].empty:
         df_child_info = sheets_dict['child_info'].copy()
-        # Convert age to numeric
-        if 'Age of child ${child_id} as at when MDA was done (19th to 25th July 2025)' in df_child_info.columns:
-            df_child_info['age_months'] = pd.to_numeric(
-                df_child_info['Age of child ${child_id} as at when MDA was done (19th to 25th July 2025)'], 
-                errors='coerce'
-            )
+        # Convert age to numeric - check for both old and new date formats
+        age_col_variants = [
+            'Age of child ${child_id} as at when MDA was done (6th to 11th December 2025)',
+            'Age of child ${child_id} as at when MDA was done (19th to 25th July 2025)'
+        ]
+        for age_col in age_col_variants:
+            if age_col in df_child_info.columns:
+                df_child_info['age_months'] = pd.to_numeric(
+                    df_child_info[age_col], 
+                    errors='coerce'
+                )
+                break
         sheets_dict['child_info'] = df_child_info
     
     # Process child_infoo sheet (children <5 years)
     if not sheets_dict['child_infoo'].empty:
         df_child_infoo = sheets_dict['child_infoo'].copy()
-        # Convert age column
-        age_col = 'Q88. Child name and age ${child_idd} as at when MDA was done (19th to 25th July 2025)'
-        if age_col in df_child_infoo.columns:
-            df_child_infoo['age_months'] = pd.to_numeric(df_child_infoo[age_col], errors='coerce')
+        # Convert age column - check for both old and new date formats
+        age_col_variants = [
+            'Q88. Child name and age ${child_idd} as at when MDA was done (6th to 11th December 2025)',
+            'Q88. Child name and age ${child_idd} as at when MDA was done (19th to 25th July 2025)'
+        ]
+        for age_col in age_col_variants:
+            if age_col in df_child_infoo.columns:
+                df_child_infoo['age_months'] = pd.to_numeric(df_child_infoo[age_col], errors='coerce')
+                break
         sheets_dict['child_infoo'] = df_child_infoo
     
     # Process net_repeat sheet
@@ -961,8 +952,9 @@ def perform_qc_checks(df, child_df=None):
     
     # QC Check 5: Check child_infoo sheet if provided (children 1-59 months)
     if child_df is not None and not child_df.empty:
-        # Find child sheet columns
+        # Find child sheet columns - updated for new backend structure
         age_col = find_column(child_df, [
+            'Q88. Child name and age ${child_idd} as at when MDA was done (6th to 11th December 2025)',
             'Q88. Child name and age ${child_idd} as at when MDA was done (19th to 25th July 2025)',
             'age_months',
             'child_age'
@@ -980,7 +972,8 @@ def perform_qc_checks(df, child_df=None):
         q102_col = find_column(df, [
             'Q102. About how many minutes did the CDD spend in your household?',
             'Q102',
-            'cdd_time_minutes'
+            'cdd_time_minutes',
+            'cdd_time'
         ])
         
         # Check Q94 (child swallowed AZM) AND child age >59 months
@@ -1674,7 +1667,9 @@ def run_dashboard():
                     'Q17', 
                     'age', 
                     'respondent_age',
+                    'Age of child ${child_id} as at when MDA was done (6th to 11th December 2025)',
                     'Age of child ${child_id} as at when MDA was done (24th to 29th July 2025)',
+                    'Age of child ${child_id} as at when MDA was done (19th to 25th July 2025)',
                     'child_age',
                     'Age',
                     'age_years'
