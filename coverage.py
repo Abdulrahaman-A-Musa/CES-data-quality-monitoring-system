@@ -21,7 +21,6 @@ ADMIN_USERNAME = "Admin"
 
 # LGA username to LGA name mapping (no passwords needed)
 LGA_CREDENTIALS = {
-    "Katsina": "Katsina",
     "ingawa": "Ingawa",
     "kankara": "Kankara",
     "kankia": "Kankia",
@@ -31,13 +30,34 @@ LGA_CREDENTIALS = {
 }
 
 
-KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/adaeFCYx8EYfCnB2xUaGSD/export-settings/esABciq2qXWHMdzSDnj55rL/data.xlsx"
+KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/aeoL9wVQqf9wbEqQJETTP5/export-settings/es8YLu3EcmbKkMSeeaUnyzi/data.xlsx"
 
 # ---------------- COMMUNITY MAPPING DATA ----------------
-COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	community_name	Q4. Community Name	Planned HH
-
-Katsina	Yamma	80111	Filing Polo community	34
-"""
+COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	Q4. Community Name	community_name	Planned HH
+Ingawa	Agayawa	Mattallawa Unguwan Huri	80111	27
+Ingawa	Agayawa	Yallami Gabas	80112	28
+Ingawa	Bareruwa	Santa Ruruma	80121	23
+Ingawa	Bareruwa	Kuringihi	80122	23
+Kankara	Kankara	Dandutse Layin Faruku Ud	80211	161
+Kankara	Kankara	Kofar Kudu Tashar Gyada	80212	72
+Kankara	Yargoje	Yargoje Kofar Fada	80221	113
+Kankara	Yargoje	Danmarke Asibiti	80222	92
+Kankia	Fakuwa Kafin Dangi	Rugar Allo	80311	56
+Kankia	Fakuwa Kafin Dangi	Yamade	80312	62
+Kankia	Galadima A	Bakin Kasuwar Halilu	80321	39
+Kankia	Galadima A	Kauyen Dawa Layin Labo	80322	67
+Mani	Bagiwa	Nasarawa Kainawa	80411	47
+Mani	Bagiwa	Dungun Agala	80412	45
+Mani	Bujawa	Kwangwama Galadinawa	80421	35
+Mani	Bujawa	Nasarawa Bagawa	80422	55
+Musawa	Garu	Gangara	80511	37
+Musawa	Garu	Garu Unguwar Gabas	80512	79
+Musawa	Danjanku Karachi	Gidan Lumu	80521	39
+Musawa	Danjanku Karachi	Alkalawa	80522	54
+Rimi	Abukur	Bayan Garin Malam Yau	80611	56
+Rimi	Abukur	Bayan Garin Malam Basiru	80612	40
+Rimi	Fardami	Makwalla Akatsaba	80621	54
+Rimi	Fardami	Fardami Layin Sada Fari	80622	56"""
 
 # Parse community mapping data
 COMMUNITY_DF = pd.read_csv(StringIO(COMMUNITY_MAPPING_DATA), sep='\t')
@@ -976,6 +996,10 @@ def perform_qc_checks(df, child_df=None):
             'cdd_time'
         ])
         
+        # Debug: Print if columns are found (can be removed later)
+        # st.write(f"DEBUG - Q95 column found: {q95_col}")
+        # st.write(f"DEBUG - Q102 column found: {q102_col}")
+        
         # Check Q94 (child swallowed AZM) AND child age >59 months
         if age_col and q94_col:
             swallowed_over_59 = child_df[
@@ -1008,7 +1032,8 @@ def perform_qc_checks(df, child_df=None):
                         q102_val = pd.to_numeric(parent_row.iloc[0].get(q102_col, -1), errors='coerce')
                         q95_val = str(child_row.get(q95_col, '')).strip()
                         
-                        if 'yes' in q95_val.lower() and q102_val == 0:
+                        # Check if Q95 is Yes and Q102 is 0 (or NaN treated as 0)
+                        if 'yes' in q95_val.lower() and (q102_val == 0 or pd.isna(q102_val) or q102_val == 0.0):
                             parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
                             qc_issues.append({
                                 'LGA': parent_info['LGA'],
@@ -1044,6 +1069,73 @@ def perform_qc_checks(df, child_df=None):
                                 'Validation Status': parent_info.get('Validation Status', 'N/A'),
                                 'Issue Type': 'Q95 Yes & Q102 >= 100 minutes',
                                 'Description': f'Child {child_row.get("child_idd", "N/A")} swallowed in presence but CDD time = {q102_val} min (>=100) (unique_code2: {child_row.get("unique_code2", "N/A")})',
+                                'Row Index': idx_child
+                            })
+        
+        # NEW QC Check: Q86 = Yes AND Q90 = No (Visited home but didn't offer child AZM)
+        q86_col = find_column(df, [
+            'Q86. Did someone visit your home between 6th December 2025 and 11th December 2025 to offer your child or children any drug from a bottle?',
+            'Q86. Did someone visit your home between 19th July 2025 and 25th July 2025 to offer your child or children any drug from a bottle?',
+            'Q86',
+            'home_visit',
+            'visited_home'
+        ])
+        q90_col = find_column(child_df, [
+            'Q90. Did someone offer child ${child_idd} azithromycin between 6th and 11th of December 2025?',
+            'Q90. Did someone offer child ${child_idd} azithromycin between 19th and 25th of July 2025?',
+            'Q90',
+            'offered_azm',
+            'offer_azithromycin'
+        ])
+        
+        if q86_col and q90_col:
+            for idx_child, child_row in child_df.iterrows():
+                submission_uuid = child_row.get('_submission__uuid', 'N/A')
+                # Find matching parent record
+                if uuid_col and submission_uuid != 'N/A':
+                    parent_row = df[df[uuid_col] == submission_uuid]
+                    if not parent_row.empty:
+                        q86_val = str(parent_row.iloc[0].get(q86_col, '')).strip()
+                        q90_val = str(child_row.get(q90_col, '')).strip()
+                        
+                        # Check if Q86 is Yes and Q90 is No
+                        if 'yes' in q86_val.lower() and 'no' in q90_val.lower():
+                            parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
+                            qc_issues.append({
+                                'LGA': parent_info['LGA'],
+                                'Ward': parent_info['Ward'],
+                                'Community': parent_info['Community'],
+                                'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                                'Enumerator': parent_info.get('Enumerator', 'N/A'),
+                                'Validation Status': parent_info.get('Validation Status', 'N/A'),
+                                'Issue Type': 'Q86 Yes & Q90 No',
+                                'Description': f'Home visited (Q86=Yes) but child {child_row.get("child_idd", "N/A")} not offered AZM (Q90=No) (unique_code2: {child_row.get("unique_code2", "N/A")})',
+                                'Row Index': idx_child
+                            })
+        
+        # NEW QC Check: Q102 = 0 AND Q94 = Yes (CDD spent 0 minutes but child swallowed AZM)
+        if q102_col and q94_col:
+            for idx_child, child_row in child_df.iterrows():
+                submission_uuid = child_row.get('_submission__uuid', 'N/A')
+                # Find matching parent record
+                if uuid_col and submission_uuid != 'N/A':
+                    parent_row = df[df[uuid_col] == submission_uuid]
+                    if not parent_row.empty:
+                        q102_val = pd.to_numeric(parent_row.iloc[0].get(q102_col, -1), errors='coerce')
+                        q94_val = str(child_row.get(q94_col, '')).strip()
+                        
+                        # Check if Q102 is 0 (or NaN) and Q94 is Yes
+                        if 'yes' in q94_val.lower() and (q102_val == 0 or pd.isna(q102_val) or q102_val == 0.0):
+                            parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
+                            qc_issues.append({
+                                'LGA': parent_info['LGA'],
+                                'Ward': parent_info['Ward'],
+                                'Community': parent_info['Community'],
+                                'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
+                                'Enumerator': parent_info.get('Enumerator', 'N/A'),
+                                'Validation Status': parent_info.get('Validation Status', 'N/A'),
+                                'Issue Type': 'Q102 = 0 & Q94 Yes',
+                                'Description': f'CDD spent 0 minutes (Q102=0) but child {child_row.get("child_idd", "N/A")} swallowed AZM (Q94=Yes) (unique_code2: {child_row.get("unique_code2", "N/A")})',
                                 'Row Index': idx_child
                             })
         
