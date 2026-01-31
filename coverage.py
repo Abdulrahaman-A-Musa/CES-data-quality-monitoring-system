@@ -647,7 +647,7 @@ def calculate_metrics(df):
         status_counts = df['_validation_status'].value_counts()
         metrics['approved'] = status_counts.get('Approved', 0)
         metrics['pending'] = status_counts.get('Not Validated', 0) + status_counts.get('On Hold', 0)
-        metrics['rejected'] = status_counts.get('Rejected', 0)
+        metrics['rejected'] = status_counts.get('Rejected', 0) + status_counts.get('Not Approved', 0)
     
     if 'total_eligible' in df.columns:
         metrics['total_eligible'] = int(df['total_eligible'].sum())
@@ -1138,29 +1138,18 @@ def perform_qc_checks(df, child_df=None):
                                 'Description': f'CDD spent 0 minutes (Q102=0) but child {child_row.get("child_idd", "N/A")} swallowed AZM (Q94=Yes) (unique_code2: {child_row.get("unique_code2", "N/A")})',
                                 'Row Index': idx_child
                             })
-        
-        # Check for duplicate unique_code2 (child duplicate)
-        unique_code2_col = find_column(child_df, ['unique_code2', 'unique_code_2', 'child_unique_code'])
-        if unique_code2_col:
-            duplicates = child_df[child_df.duplicated(subset=[unique_code2_col], keep=False)]
-            for idx, row in duplicates.iterrows():
-                submission_uuid = row.get('_submission__uuid', 'N/A')
-                parent_info = parent_lookup.get(submission_uuid, {'LGA': 'N/A', 'Ward': 'N/A', 'Community': 'N/A'})
-                qc_issues.append({
-                    'LGA': parent_info['LGA'],
-                    'Ward': parent_info['Ward'],
-                    'Community': parent_info['Community'],
-                    'Unique HH ID': parent_info.get('Unique HH ID', 'N/A'),
-                    'Enumerator': parent_info.get('Enumerator', 'N/A'),
-                    'Validation Status': parent_info.get('Validation Status', 'N/A'),
-                    'Issue Type': 'Child Duplicate (unique_code2)',
-                    'Description': f'Duplicate unique_code2: {row.get(unique_code2_col, "N/A")}',
-                    'Row Index': idx
-                })
     
     # QC Check 6: Duplicate unique_code (HH Duplicate)
+    # Exclude records with validation status "Not Approved" from duplicate checks
     if unique_code_col:
-        duplicates = df[df.duplicated(subset=[unique_code_col], keep=False)]
+        # Filter out "Not Approved" records before checking for duplicates
+        df_for_dup_check = df.copy()
+        if validation_status_col:
+            df_for_dup_check = df_for_dup_check[
+                ~df_for_dup_check[validation_status_col].astype(str).str.contains('Not Approved', case=False, na=False)
+            ]
+        
+        duplicates = df_for_dup_check[df_for_dup_check.duplicated(subset=[unique_code_col], keep=False)]
         for idx, row in duplicates.iterrows():
             qc_issues.append({
                 'LGA': row.get(lga_col, 'N/A') if lga_col else 'N/A',
