@@ -34,14 +34,14 @@ KOBO_DATA_URL = "https://kf.kobotoolbox.org/api/v2/assets/aeoL9wVQqf9wbEqQJETTP5
 
 # ---------------- COMMUNITY MAPPING DATA ----------------
 COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	Q4. Community Name	community_name	Planned HH
-Ingawa	Agayawa	Mattallawa Unguwan Huri	80111	27
-Ingawa	Agayawa	Yallami Gabas	80112	28
-Ingawa	Bareruwa	Santa Ruruma	80121	23
-Ingawa	Bareruwa	Kuringihi	80122	23
-Kankara	Kankara	Dandutse Layin Faruku Ud	80211	161
-Kankara	Kankara	Kofar Kudu Tashar Gyada	80212	72
-Kankara	Yargoje	Yargoje Kofar Fada	80221	113
-Kankara	Yargoje	Danmarke Asibiti	80222	92
+Ingawa	Agayawa	Mattallawa Unguwan Huri	80111	44
+Ingawa	Agayawa	Yallami Gabas	80112	45
+Ingawa	Bareruwa	Santa Ruruma	80121	40
+Ingawa	Bareruwa	Kuringihi	80122	39
+Kankara	Kankara	Dandutse Layin Faruku Ud	80211	78
+Kankara	Kankara	Kofar Kudu Tashar Gyada	80212	37
+Kankara	Yargoje	Yargoje Kofar Fada	80221	56
+Kankara	Yargoje	Danmarke Asibiti	80222	46
 Kankia	Fakuwa Kafin Dangi	Rugar Allo	80311	56
 Kankia	Fakuwa Kafin Dangi	Yamade	80312	62
 Kankia	Galadima A	Bakin Kasuwar Halilu	80321	39
