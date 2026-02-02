@@ -37,7 +37,7 @@ COMMUNITY_MAPPING_DATA = """Q2. Local Government Area	Q3.Ward	Q4. Community Name
 Ingawa	Agayawa	Mattallawa Unguwan Huri	80111	44
 Ingawa	Agayawa	Yallami Gabas	80112	45
 Ingawa	Bareruwa	Santa Ruruma	80121	40
-Ingawa	Bareruwa	Kuringihi	80122	39
+Ingawa	Bareruwa	Ladan	80122	39
 Kankara	Kankara	Dandutse Layin Faruku Ud	80211	78
 Kankara	Kankara	Kofar Kudu Tashar Gyada	80212	37
 Kankara	Yargoje	Yargoje Kofar Fada	80221	56
@@ -1533,13 +1533,21 @@ def run_dashboard():
     q4_col = find_column(filtered_df, ['Q4. Community Name', 'community', 'community_name'])
     lga_col = find_column(filtered_df, ['Q2. Local Government Area', 'lga', 'LGA'])
     ward_col = find_column(filtered_df, ['Q3.Ward', 'Q3. Ward', 'ward', 'Ward'])
+    validation_status_col = find_column(filtered_df, ['_validation_status', 'validation_status', 'Validation Status'])
     
     if q4_col and not filtered_df.empty:
+        # Filter out "Not Approved" records for the coverage table
+        coverage_df = filtered_df.copy()
+        if validation_status_col:
+            coverage_df = coverage_df[
+                ~coverage_df[validation_status_col].astype(str).str.contains('Not Approved', case=False, na=False)
+            ]
+        
         # Group by LGA, Ward, Community and count households
         explorer_data = []
         
-        for lga in filtered_df[lga_col].unique() if lga_col else ['N/A']:
-            lga_df = filtered_df[filtered_df[lga_col] == lga] if lga_col else filtered_df
+        for lga in coverage_df[lga_col].unique() if lga_col else ['N/A']:
+            lga_df = coverage_df[coverage_df[lga_col] == lga] if lga_col else coverage_df
             
             for ward in lga_df[ward_col].unique() if ward_col else ['N/A']:
                 ward_df = lga_df[lga_df[ward_col] == ward] if ward_col else lga_df
@@ -1552,7 +1560,7 @@ def run_dashboard():
                         # Get planned HH
                         planned_hh = COMMUNITY_PLANNED_HH.get(str(community_code), 0)
                         
-                        # Count reached HH
+                        # Count reached HH (excluding "Not Approved")
                         reached_hh = len(ward_df[ward_df[q4_col] == community_code])
                         
                         # Calculate percentage
