@@ -600,8 +600,13 @@ def format_display_text(text):
 # ---------------- METRICS CALCULATION ----------------
 def calculate_metrics(df):
     """Calculate key metrics from the dataset"""
+    # Filter out "Not Approved" records from total submissions count
+    df_valid = df.copy()
+    if '_validation_status' in df.columns:
+        df_valid = df[~df['_validation_status'].astype(str).str.contains('Not Approved', case=False, na=False)]
+    
     metrics = {
-        'total_submissions': len(df),
+        'total_submissions': len(df_valid),  # Count only non-"Not Approved" records
         'total_lgas': 0,
         'total_wards': 0,
         'total_communities': 0,
@@ -618,29 +623,29 @@ def calculate_metrics(df):
     # Flexible column name matching for LGA (case-insensitive)
     lga_cols = ['lgas', 'lga', 'Q2. Local Government Area', 'LGA', 'Local Government Area', 'Lgas']
     for col in lga_cols:
-        if col in df.columns:
-            metrics['total_lgas'] = df[col].nunique()
+        if col in df_valid.columns:
+            metrics['total_lgas'] = df_valid[col].nunique()
             break
     
     # Flexible column name matching for Ward (case-insensitive)
     ward_cols = ['wards', 'ward', 'Q3.Ward', 'Q3. Ward', 'Ward', 'Wards']
     for col in ward_cols:
-        if col in df.columns:
-            metrics['total_wards'] = df[col].nunique()
+        if col in df_valid.columns:
+            metrics['total_wards'] = df_valid[col].nunique()
             break
     
     # Flexible column name matching for Community
     community_cols = ['Community Name', 'Q4. Community Name', 'community', 'Community']
     for col in community_cols:
-        if col in df.columns:
-            metrics['total_communities'] = df[col].nunique()
+        if col in df_valid.columns:
+            metrics['total_communities'] = df_valid[col].nunique()
             break
     
     # Flexible column name matching for Enumerator - ADDED username
     enum_cols = ['username', 'Enumerator id', 'Type in your Name', 'enumerator', 'Enumerator']
     for col in enum_cols:
-        if col in df.columns:
-            metrics['total_enumerators'] = df[col].nunique()
+        if col in df_valid.columns:
+            metrics['total_enumerators'] = df_valid[col].nunique()
             break
     
     if '_validation_status' in df.columns:
@@ -649,8 +654,8 @@ def calculate_metrics(df):
         metrics['pending'] = status_counts.get('Not Validated', 0) + status_counts.get('On Hold', 0)
         metrics['rejected'] = status_counts.get('Rejected', 0) + status_counts.get('Not Approved', 0)
     
-    if 'total_eligible' in df.columns:
-        metrics['total_eligible'] = int(df['total_eligible'].sum())
+    if 'total_eligible' in df_valid.columns:
+        metrics['total_eligible'] = int(df_valid['total_eligible'].sum())
     
     return metrics
 
